@@ -13,7 +13,9 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Leashable;
+import net.minecraft.world.entity.animal.equine.AbstractHorse;
 import net.minecraft.world.entity.decoration.LeashFenceKnotEntity;
 import net.minecraft.world.item.LeadItem;
 import net.minecraft.world.level.Level;
@@ -36,9 +38,9 @@ public class EasyLead implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		LOGGER.info("Easy Lead v1.0 initialized. Tether and untether animals anywhere!");
+		LOGGER.info("Easy Lead initialized with Horse Lead Slot & Quick-Tethering!");
 
-		// Intercept right-click block interaction to tether and untether animals
+		// Intercept right-click block interaction for mounted tethering, hand tethering, and untethering
 		UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
 			if (player.isSpectator()) {
 				return InteractionResult.PASS;
@@ -53,9 +55,24 @@ public class EasyLead implements ModInitializer {
 					return InteractionResult.PASS;
 				}
 
-				List<Leashable> playerLeashedMobs = Leashable.leashableLeashedTo(player);
+				// Case 1: Player is riding a horse that has a lead equipped in its lead slot -> Quick-Tether from saddle!
+				Entity vehicle = player.getVehicle();
+				if (vehicle instanceof AbstractHorse horse && horse instanceof LeadHolderHorse leadHorse && leadHorse.hasEquippedLead()) {
+					if (!world.isClientSide()) {
+						player.stopRiding();
+						LeashFenceKnotEntity activeKnot = LeashFenceKnotEntity.getOrCreateKnot(world, pos);
+						horse.setLeashedTo(activeKnot, true);
+						leadHorse.setLeashedFromEquippedLead(true);
+						activeKnot.playPlacementSound();
+						world.gameEvent(GameEvent.BLOCK_ATTACH, pos, GameEvent.Context.of(player));
+						return InteractionResult.SUCCESS_SERVER;
+					} else {
+						return InteractionResult.SUCCESS;
+					}
+				}
 
-				// Case 1: Player is holding leashed animals -> Tether them to this block
+				// Case 2: Player is holding leashed animals on foot -> Tether them to this block
+				List<Leashable> playerLeashedMobs = Leashable.leashableLeashedTo(player);
 				if (!playerLeashedMobs.isEmpty()) {
 					if (!world.isClientSide()) {
 						InteractionResult result = LeadItem.bindPlayerMobs(player, world, pos);
@@ -67,7 +84,7 @@ public class EasyLead implements ModInitializer {
 					}
 				}
 
-				// Case 2: Player has no leashed animals -> Check if this block has tethered animals to untether
+				// Case 3: Player is on foot and right-clicks an anchor block that has tethered animals -> Untether
 				Optional<LeashFenceKnotEntity> knot = LeashFenceKnotEntity.getKnot(world, pos);
 				if (knot.isPresent()) {
 					LeashFenceKnotEntity activeKnot = knot.get();
@@ -77,7 +94,13 @@ public class EasyLead implements ModInitializer {
 						if (!world.isClientSide()) {
 							boolean untethered = false;
 							for (Leashable mob : knotMobs) {
-								if (mob.canHaveALeashAttachedTo(player)) {
+								if (mob instanceof AbstractHorse horse && horse instanceof LeadHolderHorse leadHorse && leadHorse.hasEquippedLead()) {
+									// Horse with equipped lead slot: untether cleanly without spawning loose item
+									mob.dropLeash();
+									leadHorse.setLeashedFromEquippedLead(false);
+									untethered = true;
+								} else if (mob.canHaveALeashAttachedTo(player)) {
+									// Standard mob: transfer leash to player's hand
 									mob.setLeashedTo(player, true);
 									untethered = true;
 								}
