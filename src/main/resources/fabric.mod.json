@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"id": "easylead",
+	"version": "${version}",
+	"name": "Easy Lead",
+	"description": "Tether and untether horses and leashable animals to any solid block type in Minecraft.",
+	"authors": [
+		"Arman"
+	],
+	"contact": {
+		"homepage": "https://github.com"
+	},
+	"license": "MIT",
+	"icon": "assets/easylead/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.antigravity.easylead.EasyLead"
+		]
+	},
+	"mixins": [
+		"easylead.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~26.2",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}
