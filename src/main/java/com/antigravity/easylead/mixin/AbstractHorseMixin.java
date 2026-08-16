@@ -7,10 +7,8 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.animal.equine.AbstractHorse;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -19,7 +17,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(AbstractHorse.class)
 public abstract class AbstractHorseMixin extends Animal implements LeadHolderHorse {
@@ -84,13 +81,6 @@ public abstract class AbstractHorseMixin extends Animal implements LeadHolderHor
 		if (!lead.isEmpty()) {
 			this.spawnAtLocation(level, lead);
 			this.easylead$leadContainer.setItem(0, ItemStack.EMPTY);
-		}
-	}
-
-	@Inject(method = "spawnAtLocation(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/ItemLike;)Lnet/minecraft/world/entity/item/ItemEntity;", at = @At("HEAD"), cancellable = true)
-	private void onSpawnAtLocation(ServerLevel level, ItemLike item, CallbackInfoReturnable<ItemEntity> cir) {
-		if (item == Items.LEAD && this.hasEquippedLead() && this.isAlive()) {
-			cir.setReturnValue(null);
 		}
 	}
 }

@@ -4,7 +4,9 @@
 	"compatibilityLevel": "JAVA_25",
 	"mixins": [
 		"AbstractHorseMixin",
+		"AbstractMountInventoryMenuMixin",
 		"BlockAttachedEntityMixin",
+		"EntityMixin",
 		"HorseInventoryMenuMixin",
 		"LeadItemMixin",
 		"LeashFenceKnotEntityMixin"
