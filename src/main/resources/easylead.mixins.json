@@ -8,7 +8,6 @@
 		"BlockAttachedEntityMixin",
 		"EntityMixin",
 		"HorseInventoryMenuMixin",
-		"LeadItemMixin",
 		"LeashFenceKnotEntityMixin"
 	],
 	"injectors": {
